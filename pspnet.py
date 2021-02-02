@@ -19,7 +19,7 @@ import math
 # matplotlib.use('TkAgg')
 # --
 import matplotlib.pyplot as plt
-
+from PIL import Image
 
 from imageio import imread
 # These are the means for the ImageNet pretrained ResNet
@@ -63,7 +63,13 @@ class PSPNet(object):
             print(
                 "Input %s not fitting for network size %s, resizing. You may want to try sliding prediction for better results." % (
                 img.shape[0:2], self.input_shape))
+            
+            # method 1
             img = misc.imresize(img, self.input_shape)
+            
+            # method 2
+            #img = np.array(Image.fromarray(img.astype(np.uint8)).resize((self.input_shape[1], self.input_shape[0]), resample=Image.BILINEAR))
+            
 
         img = img - DATA_MEAN
         img = img[:, :, ::-1]  # RGB => BGR
@@ -133,7 +139,16 @@ class PSPNet(object):
         print("Started prediction...")
         for scale in scales:
             print("Predicting image scaled by %f" % scale)
+            # method1
+            # skywalker: misc.imresize is deprecated. so need find abetter way if we want it works in new scipy >=1.3.0
+            # scale is a floating point number
             scaled_img = misc.imresize(img, size=scale, interp="bilinear")
+            
+            # method 2
+            #scaled_img = np.array(Image.fromarray(img.astype(np.uint8)).resize((int(np.floor(img.shape[1]*scale)), int(np.floor(img.shape[0]*scale))), resample=Image.BILINEAR))
+            
+            
+            # I have verified, the result of two methods are same
 
             if sliding_evaluation:
                 scaled_probs = self.predict_sliding(scaled_img, flip_evaluation)
@@ -255,15 +270,22 @@ def main(args):
             pspnet = PSPNet50(nb_classes=2, input_shape=(
                 768, 480), weights=args.weights)
 
+
+
         EVALUATION_SCALES = [1.0]
         if args.multi_scale:
             EVALUATION_SCALES = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75]  # must be all floats! Taken from original paper
+
+        print("EVALUATION_SCALES: ")
+        print(EVALUATION_SCALES)
 
         for i, img_path in enumerate(images):
             print("Processing image {} / {}".format(i + 1, len(images)))
             img = imread(img_path, pilmode='RGB')
 
             probs = pspnet.predict_multi_scale(img, args.flip, args.sliding, EVALUATION_SCALES)
+            print("probs: ")
+            print(probs.shape)
 
             cm = np.argmax(probs, axis=2)
             pm = np.max(probs, axis=2)
