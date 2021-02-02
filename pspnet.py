@@ -8,6 +8,7 @@ from scipy import misc, ndimage
 from keras import backend as K
 from keras.models import model_from_json, load_model
 import tensorflow as tf
+
 import layers_builder as layers
 from glob import glob
 from utils import utils
@@ -249,6 +250,11 @@ def main(args):
 
     sess = tf.Session()
     K.set_session(sess)
+    
+    # double check the correct devices are visible to TF
+    from tensorflow.python.client import device_lib
+    #print("devicelib: ")
+    #print(device_lib.list_local_devices())
 
     with sess.as_default():
         print(args)

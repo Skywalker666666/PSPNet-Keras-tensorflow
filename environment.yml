@@ -4,7 +4,6 @@ channels:
   - anaconda
 dependencies:
   - python=3.5
-  - tensorflow-gpu
   - pip
   - pip:
     - scipy==1.2.2
@@ -17,4 +16,5 @@ dependencies:
     - tensorflow==1.0.0
     - matplotlib
     - h5py
+    - tensorflow-gpu
 
